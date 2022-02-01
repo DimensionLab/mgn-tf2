@@ -4,11 +4,6 @@
 # ML, datasets
 datasets/**/*.tfrecord
 datasets/**/*.json
-datasets/**/*.npy
-datasets/**/*.pkl
-datasets/**/*.tar
-datasets/**/*.txt
-datasets/**/*/checkpoints
 output/
 Visualization/logs
 

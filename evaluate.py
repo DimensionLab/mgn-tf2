@@ -127,25 +127,37 @@ def rollout(model, initial_frame, num_steps, wind=False):
     """In-situ visualization"""
     figure = plt.figure()
     axis = figure.add_subplot(121, projection="3d")
-    axis2 = figure.add_subplot(122, projection="3d")
     figure.set_figheight(6)
     figure.set_figwidth(12)
 
-    skip = 10
-    num_steps = timestep_data["pred_world_pos"].shape[0]
-    num_frames = num_steps // skip
-    upper_bound = np.amax(timestep_data["pred_world_pos"], axis=(0,1))
-    lower_bound= np.amin(timestep_data["pred_world_pos"], axis=(0,1))
-
     rollout_loop = tqdm(range(num_steps))
-    for _ in rollout_loop:
+    for i in rollout_loop:
         frame = {**initial_frame, 'prev|world_pos': prev_pos, 'world_pos': curr_pos}
         node_features, edge_features, senders, receivers, frame = frame_to_graph(frame, wind=wind)
         graph = core_model.MultiGraph(node_features, edge_sets=[core_model.EdgeSet(edge_features, senders, receivers)])
 
         next_pos = model.predict(graph, frame)
         next_pos = tf.where(mask, next_pos, curr_pos)
+
         trajectory.append(curr_pos)
+
+        """Viz"""
+        upper_bound = np.amax(next_pos, axis=(0,1))
+        lower_bound= np.amin(next_pos, axis=(0,1))
+
+        axis.cla()
+        axis.set_xlim([lower_bound[0], upper_bound[0]])
+        axis.set_ylim([lower_bound[1], upper_bound[1]])
+        axis.set_zlim([lower_bound[2], upper_bound[2]])
+        axis.autoscale(False)
+        positions = next_pos
+        faces = frame['cells']
+        axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
+        axis.set_title('Predicted')
+
+        figure.suptitle(f"Time step: {i}")
+
+        plt.show(block=True)
 
         prev_pos, curr_pos = curr_pos, next_pos
 
