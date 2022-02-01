@@ -1,0 +1,5 @@
+# on Mac, use tensorflow just with CPU support
+tensorflow-gpu
+matplotlib
+numpy
+tqdm
