@@ -11,24 +11,27 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_cloth(data, filename):
+def plot_cloth(data, filename=None):
     figure = plt.figure()
     axis = figure.add_subplot(121, projection="3d")
     axis2 = figure.add_subplot(122, projection="3d")
     figure.set_figheight(6)
     figure.set_figwidth(12)
 
-    num_frames = data["pred_world_pos"].shape[0]
+    skip = 10
+    num_steps = data["pred_world_pos"].shape[0]
+    num_frames = num_steps // skip
     upper_bound = np.amax(data["pred_world_pos"], axis=(0,1))
     lower_bound= np.amin(data["pred_world_pos"], axis=(0,1))
     def animate(frame):
+        step = (frame*skip) % num_steps
         axis.cla()
         axis.set_xlim([lower_bound[0], upper_bound[0]])
         axis.set_ylim([lower_bound[1], upper_bound[1]])
         axis.set_zlim([lower_bound[2], upper_bound[2]])
         axis.autoscale(False)
-        positions = data['pred_world_pos'][frame]
-        faces = data["cells"][frame]
+        positions = data['pred_world_pos'][step]
+        faces = data["cells"][step]
         axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
         axis.set_title('Predicted')
 
@@ -37,22 +40,23 @@ def plot_cloth(data, filename):
         axis2.set_ylim([lower_bound[1], upper_bound[1]])
         axis2.set_zlim([lower_bound[2], upper_bound[2]])
         axis2.autoscale(False)
-        positions = data['true_world_pos'][frame]
-        faces = data["cells"][frame]
+        positions = data['true_world_pos'][step]
+        faces = data["cells"][step]
         axis2.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
         axis2.set_title('Ground Truth')
 
-        figure.suptitle(f"Time step: {frame}")
+        figure.suptitle(f"Time step: {step}")
 
         return figure,
 
     ani = animation.FuncAnimation(figure, animate, frames=num_frames, interval=100)
 
-    ani.save(filename)
+    # ani.save(filename)
+    plt.show(block=True)
 
 
 def generate_all():
-    results_path = os.path.join(os.path.dirname(__file__), '..', 'models', 'results', 'weights-step2300000-loss0.04908.hdf5')
+    results_path = os.path.join(os.path.dirname(__file__), 'results', 'weights-step2300000-loss0.04908.hdf5')
     output_path = os.path.join(os.path.dirname(__file__), 'animations', 'weights-step2300000-loss0.04908.hdf5')
 
     Path(output_path).mkdir(parents=True, exist_ok=True)

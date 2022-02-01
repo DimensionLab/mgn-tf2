@@ -4,6 +4,7 @@ import os
 import pickle
 from pathlib import Path
 import argparse
+from matplotlib import animation, pyplot as plt
 
 from tqdm import tqdm
 import numpy as np
@@ -13,6 +14,7 @@ import common
 import core_model
 import cloth_model
 from dataset import load_dataset_eval
+from plot_cloth import plot_cloth
 
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
@@ -25,6 +27,48 @@ except RuntimeError as e:
 
 model_dir = os.path.dirname(__file__)
 
+def plot_timestep(timestep_data):
+    figure = plt.figure()
+    axis = figure.add_subplot(121, projection="3d")
+    axis2 = figure.add_subplot(122, projection="3d")
+    figure.set_figheight(6)
+    figure.set_figwidth(12)
+
+    skip = 10
+    num_steps = timestep_data["pred_world_pos"].shape[0]
+    num_frames = num_steps // skip
+    upper_bound = np.amax(timestep_data["pred_world_pos"], axis=(0,1))
+    lower_bound= np.amin(timestep_data["pred_world_pos"], axis=(0,1))
+    def animate(frame):
+        step = (frame*skip) % num_steps
+        axis.cla()
+        axis.set_xlim([lower_bound[0], upper_bound[0]])
+        axis.set_ylim([lower_bound[1], upper_bound[1]])
+        axis.set_zlim([lower_bound[2], upper_bound[2]])
+        axis.autoscale(False)
+        positions = timestep_data['pred_world_pos'][step]
+        faces = timestep_data["cells"][step]
+        axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
+        axis.set_title('Predicted')
+
+        axis2.cla()
+        axis2.set_xlim([lower_bound[0], upper_bound[0]])
+        axis2.set_ylim([lower_bound[1], upper_bound[1]])
+        axis2.set_zlim([lower_bound[2], upper_bound[2]])
+        axis2.autoscale(False)
+        positions = timestep_data['true_world_pos'][step]
+        faces = timestep_data["cells"][step]
+        axis2.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
+        axis2.set_title('Ground Truth')
+
+        figure.suptitle(f"Time step: {step}")
+
+        return figure,
+
+    _ = animation.FuncAnimation(figure, animate, frames=num_frames, interval=100)
+
+    # ani.save(filename)
+    plt.show(block=True)
 
 def frame_to_graph(frame, wind=False):
     """Builds input graph."""
@@ -79,6 +123,19 @@ def rollout(model, initial_frame, num_steps, wind=False):
     prev_pos = initial_frame['prev|world_pos']
     curr_pos = initial_frame['world_pos']
     trajectory = []
+
+    """In-situ visualization"""
+    figure = plt.figure()
+    axis = figure.add_subplot(121, projection="3d")
+    axis2 = figure.add_subplot(122, projection="3d")
+    figure.set_figheight(6)
+    figure.set_figwidth(12)
+
+    skip = 10
+    num_steps = timestep_data["pred_world_pos"].shape[0]
+    num_frames = num_steps // skip
+    upper_bound = np.amax(timestep_data["pred_world_pos"], axis=(0,1))
+    lower_bound= np.amin(timestep_data["pred_world_pos"], axis=(0,1))
 
     rollout_loop = tqdm(range(num_steps))
     for _ in rollout_loop:
@@ -160,6 +217,7 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
 
         data = {**trajectory, 'true_world_pos': trajectory['world_pos'], 'pred_world_pos': predicted_trajectory, 'errors': rmse_errors}
         data = {k: to_numpy(v) for k, v in data.items()}
+        plot_cloth(data)
 
         save_path = os.path.join(model_dir, 'results', f'{i:03d}.eval')
         with open(save_path, 'wb') as f:
