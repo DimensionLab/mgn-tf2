@@ -92,8 +92,6 @@ def rollout(model, initial_frame, cells, wind=False):
     axis2 = figure.add_subplot(122, projection="3d")
     figure.set_figheight(6)
     figure.set_figwidth(12)
-    upper_bound = np.amax(curr_pos, axis=(0,1))
-    lower_bound= np.amin(curr_pos, axis=(0,1))
 
     rollout_loop = tqdm(range(num_steps))
     for i in rollout_loop:
@@ -109,9 +107,6 @@ def rollout(model, initial_frame, cells, wind=False):
         if i % skip:        
             """Viz"""
             axis.cla()
-            axis.set_xlim([lower_bound[0], upper_bound[0]])
-            axis.set_ylim([lower_bound[1], upper_bound[1]])
-            axis.set_zlim([lower_bound[2], upper_bound[2]])
             axis.autoscale(True)
             positions = next_pos
             faces = cells[i]
@@ -119,11 +114,7 @@ def rollout(model, initial_frame, cells, wind=False):
             axis.set_title('Predicted')
 
             axis2.cla()
-            axis2.set_xlim([lower_bound[0], upper_bound[0]])
-            axis2.set_ylim([lower_bound[1], upper_bound[1]])
-            axis2.set_zlim([lower_bound[2], upper_bound[2]])
-            axis2.autoscale(False)
-            # TODO: not sure if this is the right data
+            axis2.autoscale(True)
             positions = curr_pos
             faces = cells[i]
             axis2.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
@@ -194,10 +185,7 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
 
     Path(os.path.join(model_dir, 'results')).mkdir(exist_ok=True)
     for i, trajectory in enumerate(dataset.take(num_trajectories)):
-        print(trajectory)
         initial_frame = {k: v[0] for k, v in trajectory.items()}
-        print(trajectory['cells'].shape[0])
-        print(initial_frame['cells'].shape[0])
         predicted_trajectory = rollout(model, initial_frame, trajectory['cells'], wind=wind)
 
         error = tf.reduce_mean(tf.square(predicted_trajectory - trajectory['world_pos']), axis=-1)
