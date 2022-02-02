@@ -27,48 +27,6 @@ except RuntimeError as e:
 
 model_dir = os.path.dirname(__file__)
 
-def plot_timestep(timestep_data):
-    figure = plt.figure()
-    axis = figure.add_subplot(121, projection="3d")
-    axis2 = figure.add_subplot(122, projection="3d")
-    figure.set_figheight(6)
-    figure.set_figwidth(12)
-
-    skip = 10
-    num_steps = timestep_data["pred_world_pos"].shape[0]
-    num_frames = num_steps // skip
-    upper_bound = np.amax(timestep_data["pred_world_pos"], axis=(0,1))
-    lower_bound= np.amin(timestep_data["pred_world_pos"], axis=(0,1))
-    def animate(frame):
-        step = (frame*skip) % num_steps
-        axis.cla()
-        axis.set_xlim([lower_bound[0], upper_bound[0]])
-        axis.set_ylim([lower_bound[1], upper_bound[1]])
-        axis.set_zlim([lower_bound[2], upper_bound[2]])
-        axis.autoscale(False)
-        positions = timestep_data['pred_world_pos'][step]
-        faces = timestep_data["cells"][step]
-        axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
-        axis.set_title('Predicted')
-
-        axis2.cla()
-        axis2.set_xlim([lower_bound[0], upper_bound[0]])
-        axis2.set_ylim([lower_bound[1], upper_bound[1]])
-        axis2.set_zlim([lower_bound[2], upper_bound[2]])
-        axis2.autoscale(False)
-        positions = timestep_data['true_world_pos'][step]
-        faces = timestep_data["cells"][step]
-        axis2.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
-        axis2.set_title('Ground Truth')
-
-        figure.suptitle(f"Time step: {step}")
-
-        return figure,
-
-    _ = animation.FuncAnimation(figure, animate, frames=num_frames, interval=100)
-
-    # ani.save(filename)
-    plt.show(block=True)
 
 def frame_to_graph(frame, wind=False):
     """Builds input graph."""
@@ -116,19 +74,26 @@ def build_model(model, dataset, wind=False):
     print(f'Total trainable parameters: {total}')
 
 
-def rollout(model, initial_frame, num_steps, wind=False):
+def rollout(model, initial_frame, cells, wind=False):
     """Rollout a model trajectory."""
     mask = tf.equal(initial_frame['node_type'], common.NodeType.NORMAL)
+
+    num_steps = cells.shape[0]
+    skip = 10
 
     prev_pos = initial_frame['prev|world_pos']
     curr_pos = initial_frame['world_pos']
     trajectory = []
 
     """In-situ visualization"""
+    plt.ion()
     figure = plt.figure()
     axis = figure.add_subplot(121, projection="3d")
+    axis2 = figure.add_subplot(122, projection="3d")
     figure.set_figheight(6)
     figure.set_figwidth(12)
+    upper_bound = np.amax(curr_pos, axis=(0,1))
+    lower_bound= np.amin(curr_pos, axis=(0,1))
 
     rollout_loop = tqdm(range(num_steps))
     for i in rollout_loop:
@@ -141,23 +106,33 @@ def rollout(model, initial_frame, num_steps, wind=False):
 
         trajectory.append(curr_pos)
 
-        """Viz"""
-        upper_bound = np.amax(next_pos, axis=(0,1))
-        lower_bound= np.amin(next_pos, axis=(0,1))
+        if i % skip:        
+            """Viz"""
+            axis.cla()
+            axis.set_xlim([lower_bound[0], upper_bound[0]])
+            axis.set_ylim([lower_bound[1], upper_bound[1]])
+            axis.set_zlim([lower_bound[2], upper_bound[2]])
+            axis.autoscale(True)
+            positions = next_pos
+            faces = cells[i]
+            axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
+            axis.set_title('Predicted')
 
-        axis.cla()
-        axis.set_xlim([lower_bound[0], upper_bound[0]])
-        axis.set_ylim([lower_bound[1], upper_bound[1]])
-        axis.set_zlim([lower_bound[2], upper_bound[2]])
-        axis.autoscale(False)
-        positions = next_pos
-        faces = frame['cells']
-        axis.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
-        axis.set_title('Predicted')
+            axis2.cla()
+            axis2.set_xlim([lower_bound[0], upper_bound[0]])
+            axis2.set_ylim([lower_bound[1], upper_bound[1]])
+            axis2.set_zlim([lower_bound[2], upper_bound[2]])
+            axis2.autoscale(False)
+            # TODO: not sure if this is the right data
+            positions = curr_pos
+            faces = cells[i]
+            axis2.plot_trisurf(positions[:,0], positions[:, 1], faces, positions[:, 2])
+            axis2.set_title('Ground Truth')
 
-        figure.suptitle(f"Time step: {i}")
+            figure.suptitle(f"Time step: {i}")
 
-        plt.show(block=True)
+            plt.show(block=False)
+            plt.pause(0.0001)
 
         prev_pos, curr_pos = curr_pos, next_pos
 
@@ -219,8 +194,11 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
 
     Path(os.path.join(model_dir, 'results')).mkdir(exist_ok=True)
     for i, trajectory in enumerate(dataset.take(num_trajectories)):
+        print(trajectory)
         initial_frame = {k: v[0] for k, v in trajectory.items()}
-        predicted_trajectory = rollout(model, initial_frame, trajectory['cells'].shape[0], wind=wind)
+        print(trajectory['cells'].shape[0])
+        print(initial_frame['cells'].shape[0])
+        predicted_trajectory = rollout(model, initial_frame, trajectory['cells'], wind=wind)
 
         error = tf.reduce_mean(tf.square(predicted_trajectory - trajectory['world_pos']), axis=-1)
         rmse_errors = {f'{horizon}_step_error': tf.math.sqrt(tf.reduce_mean(error[1:horizon + 1])).numpy()
@@ -229,7 +207,7 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
 
         data = {**trajectory, 'true_world_pos': trajectory['world_pos'], 'pred_world_pos': predicted_trajectory, 'errors': rmse_errors}
         data = {k: to_numpy(v) for k, v in data.items()}
-        plot_cloth(data)
+        # plot_cloth(data)
 
         save_path = os.path.join(model_dir, 'results', f'{i:03d}.eval')
         with open(save_path, 'wb') as f:
