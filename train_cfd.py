@@ -70,7 +70,7 @@ def build_model(model, optimizer, dataset, checkpoint=None):
         model.load_weights(checkpoint, by_name=True)
 
 
-def train(data_path=os.path.join(os.path.dirname(__file__), 'data', 'cylinder_flow'),num_steps=10000000, checkpoint = None):
+def train(data_path=os.path.join(os.path.dirname(__file__), 'datasets', 'cylinder_flow'),num_steps=1000000, checkpoint = None):
     dataset = load_dataset_train(
         path=data_path,
         split='train',
@@ -138,10 +138,10 @@ def train(data_path=os.path.join(os.path.dirname(__file__), 'data', 'cylinder_fl
 
         train_loop.set_description(f'Step {s}/{num_steps}, Loss {moving_loss:.5f}')
 
-        if s != 0 and s % 50000 == 0:
-            filename = f'weights-step{s:07d}-loss{moving_loss:.5f}.hdf5'
-            model.save_weights(os.path.join(os.path.dirname(__file__), 'checkpoints_cfd_long', filename))
-            np.save(os.path.join(os.path.dirname(__file__), 'checkpoints_cfd_long', f'{filename}_optimizer.npy'), optimizer.get_weights())
+        if s != 0 and s % 10000 == 0:
+            filename = f'cfd_weights-step{s:07d}-loss{moving_loss:.5f}.hdf5'
+            model.save_weights(os.path.join(os.path.dirname(__file__), 'datasets', 'cylinder_flow', 'checkpoints', filename))
+            np.save(os.path.join(os.path.dirname(__file__), 'datasets', 'cylinder_flow', 'checkpoints', f'{filename}_optimizer.npy'), optimizer.get_weights())
 
 
 
