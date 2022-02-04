@@ -13,7 +13,7 @@ import common
 import core_model
 import cloth_model
 from dataset import load_dataset_train, load_dataset_eval
-from evaluate import rollout
+from cloth_eval import rollout
 
 import datetime
 

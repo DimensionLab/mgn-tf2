@@ -104,7 +104,7 @@ def to_numpy(t):
 
 
 def avg_rmse():
-    results_path = os.path.join(model_dir, 'results', 'cfd')
+    results_path = os.path.join(model_dir, 'datasets', 'cylinder_flow', 'results')
     results_prefixes = ['og_long-step4200000-loss0.01691.hdf5']
 
     for prefix in results_prefixes:
@@ -155,14 +155,14 @@ def run(checkpoint, data_path, num_trajectories):
     build_model(model, dataset)
     model.load_weights(checkpoint, by_name=True)
 
-    Path(os.path.join(model_dir, 'results', 'cfd', os.path.split(checkpoint)[-1])).mkdir(exist_ok=True, parents=True)
+    Path(os.path.join(model_dir, 'datasets', 'cylinder_flow', 'results', os.path.split(checkpoint)[-1])).mkdir(exist_ok=True, parents=True)
     for i, trajectory in enumerate(dataset.take(num_trajectories)):
         rmse_error, predicted_trajectory = evaluate(model, trajectory)
         print(f'RMSE Errors: {rmse_error}')
 
         data = {**trajectory, 'true_velocity': trajectory['velocity'], 'pred_velocity': predicted_trajectory, 'errors': rmse_error}
         data = {k: to_numpy(v) for k, v in data.items()}
-        save_path = os.path.join(model_dir, 'results', 'cfd', os.path.split(checkpoint)[-1], f'{i:03d}.eval')
+        save_path = os.path.join(model_dir, 'datasets', 'cylinder_flow', 'results', os.path.split(checkpoint)[-1], f'{i:03d}.eval')
         with open(save_path, "wb") as fp:
             pickle.dump(data, fp)
             print(f'Evaluation results saved in {save_path}')
@@ -170,9 +170,9 @@ def run(checkpoint, data_path, num_trajectories):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("checkpoint", help="Path to checkpoint file")
-    parser.add_argument("data_path", help="Path to dataset")
-    parser.add_argument("num_trajectories", type=int, help="Number of trajectories to evaluate")
+    parser.add_argument("--checkpoint", help="Path to checkpoint file")
+    parser.add_argument("--data_path", help="Path to dataset")
+    parser.add_argument("--num_trajectories", type=int, help="Number of trajectories to evaluate")
     args = parser.parse_args()
     run(args.checkpoint, args.data_path, args.num_trajectories)
 

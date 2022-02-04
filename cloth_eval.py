@@ -141,7 +141,7 @@ def to_numpy(t):
 
 
 def avg_rmse():
-    results_path = os.path.join(model_dir, 'results')
+    results_path = os.path.join(model_dir, 'datasets', 'flag_simple', 'results')
     results_prefixes = ['og_long_noise-step9950000-loss0.05927.hdf5']
 
     for prefix in results_prefixes:
@@ -183,7 +183,7 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
 
     model.load_weights(checkpoint_file, by_name=True)
 
-    Path(os.path.join(model_dir, 'results')).mkdir(exist_ok=True)
+    Path(os.path.join(model_dir, 'datasets', 'flag_simple', 'results', os.path.split(checkpoint_file)[-1])).mkdir(exist_ok=True)
     for i, trajectory in enumerate(dataset.take(num_trajectories)):
         initial_frame = {k: v[0] for k, v in trajectory.items()}
         predicted_trajectory = rollout(model, initial_frame, trajectory['cells'], wind=wind)
@@ -197,7 +197,7 @@ def evaluate(checkpoint_file, dataset_path, num_trajectories, wind=False):
         data = {k: to_numpy(v) for k, v in data.items()}
         # plot_cloth(data)
 
-        save_path = os.path.join(model_dir, 'results', f'{i:03d}.eval')
+        save_path = os.path.join(model_dir, 'datasets', 'flag_simple', 'results', os.path.split(checkpoint_file)[-1], f'{i:03d}.eval')
         with open(save_path, 'wb') as f:
             pickle.dump(data, f)
             print(f'Evaluation results saved in {save_path}')
