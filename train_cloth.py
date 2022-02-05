@@ -140,7 +140,7 @@ def train(data_path=os.path.join(os.path.dirname(__file__), 'datasets', 'flag_si
 
     # build the model
     build_model(model, optimizer, dataset, checkpoint = checkpoint)
-    # build_model(model, optimizer, dataset, checkpoint='checkpoints/weights-step2700000-loss0.0581.hdf5')
+    # build_model(model, optimizer, dataset, checkpoint='checkpoints/flag-simple_weights-step2700000-loss0.0581.hdf5')
 
     @tf.function(experimental_compile=True)
     def warmup(graph, frame):

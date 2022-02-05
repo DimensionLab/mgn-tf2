@@ -25,7 +25,7 @@ pip install --upgrade -r requirements.txt
 DATA_DIR="./datasets/flag_simple"
 
 # Train for a few steps.
-CHECKPOINT="${DATA_DIR}/checkpoints/weights-step2100000-loss0.0680.hdf5"
+CHECKPOINT="${DATA_DIR}/checkpoints/flag-simple_weights-step2100000-loss0.0680.hdf5"
 # python -m train_cloth --data_path=${DATA_DIR} --num_steps=100000
 
 # Generate a rollout trajectory

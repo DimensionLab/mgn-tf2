@@ -1,5 +1,6 @@
-# on Mac, use tensorflow just with CPU support
 tensorflow-gpu
+# on Mac, use tensorflow-macos
+# tensorflow-macos
 matplotlib
 numpy
 tqdm

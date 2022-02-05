@@ -56,8 +56,8 @@ def plot_cloth(data, filename=None):
 
 
 def generate_all():
-    results_path = os.path.join(os.path.dirname(__file__), 'results', 'weights-step2300000-loss0.04908.hdf5')
-    output_path = os.path.join(os.path.dirname(__file__), 'animations', 'weights-step2300000-loss0.04908.hdf5')
+    results_path = os.path.join(os.path.dirname(__file__), 'results', 'flag-simple_weights-step2300000-loss0.04908.hdf5')
+    output_path = os.path.join(os.path.dirname(__file__), 'animations', 'flag-simple_weights-step2300000-loss0.04908.hdf5')
 
     Path(output_path).mkdir(parents=True, exist_ok=True)
     for i in range(100):
