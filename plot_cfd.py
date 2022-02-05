@@ -60,9 +60,10 @@ def plot_cfd_color(data, filename):
 
          return figure,
 
-    ani = animation.FuncAnimation(figure, animate, frames=num_frames, interval=30)
+    _ = animation.FuncAnimation(figure, animate, frames=num_frames, interval=30)
 
-    ani.save(filename)
+    plt.show(block=True)
+    # ani.save(filename)
 
 
 def plot_cfd_quiver(data, filename):
@@ -117,8 +118,8 @@ def plot_cfd_quiver(data, filename):
 
     ani = animation.FuncAnimation(figure, animate, frames=num_frames, interval=30)
 
-    # plt.show()
-    ani.save(filename)
+    plt.show()
+    # ani.save(filename)
 
 
 def generate_all():
@@ -144,7 +145,7 @@ def main():
     with open(args.datafile, "rb") as f:
         data = pickle.load(f)
 
-    plot_cfd_color(data, args.output)
+    plot_cfd_color([data], args.output)
 
 
 

@@ -13,7 +13,7 @@ import common
 import core_model
 import cloth_model
 from dataset import load_dataset_train, load_dataset_eval
-from evaluate import rollout
+from cloth_eval import rollout
 
 import datetime
 
@@ -177,10 +177,10 @@ def train(data_path=os.path.join(os.path.dirname(__file__), 'datasets', 'flag_si
 
         train_loop.set_description(f'Step {s}/{num_steps}, Loss {moving_loss:.5f}')
 
-        if s != 0 and s % 5000 == 0:
-            filename = f'weights-step{s:07d}-loss{moving_loss:.5f}.hdf5'
-            model.save_weights(os.path.join(os.path.dirname(__file__), 'checkpoints_og_noise', filename))
-            np.save(os.path.join(os.path.dirname(__file__), 'checkpoints_og_noise', f'{filename}_optimizer.npy'), optimizer.get_weights())
+        if s != 0 and s % 10000 == 0:
+            filename = f'flag-simple-weights-step{s:07d}-loss{moving_loss:.5f}.hdf5'
+            model.save_weights(os.path.join(os.path.dirname(__file__), 'datasets', 'flag_simple', 'checkpoints', filename))
+            np.save(os.path.join(os.path.dirname(__file__), 'datasets', 'flag_simple', 'checkpoints', f'{filename}_optimizer.npy'), optimizer.get_weights())
 
             # perform validation
             errors = validation(model, valid_dataset)

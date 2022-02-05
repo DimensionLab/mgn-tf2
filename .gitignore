@@ -4,6 +4,7 @@
 # ML, datasets
 datasets/**/*.tfrecord
 datasets/**/*.json
+datasets/*/results
 output/
 Visualization/logs
 
