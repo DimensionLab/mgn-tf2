@@ -22,17 +22,18 @@ set -x
 # Install dependencies.
 pip install --upgrade -r requirements.txt
 
-DATA_DIR="./datasets/flag_simple"
+DATA_DIR="./datasets/cylinder_flow"
 
 # Train for a few steps.
 CHECKPOINT="${DATA_DIR}/checkpoints/flag-simple_weights-step2100000-loss0.0680.hdf5"
 # python -m train_cloth --data_path=${DATA_DIR} --num_steps=100000
+python -m train_cfd --data_path=${DATA_DIR} --num_steps=2000000
 
 # Generate a rollout trajectory
 # ROLLOUT_PATH="${DATA_DIR}/rollout.pkl"
-python -m evaluate --checkpoint=${CHECKPOINT} --data_path=${DATA_DIR} --num_trajectories=2
+# python -m cloth_eval --checkpoint=${CHECKPOINT} --data_path=${DATA_DIR} --num_trajectories=2
 
-EVAL_RESULT="${DATA_DIR}/results/000.eval"
+EVAL_RESULT="${DATA_DIR}/results/flag-simple_weights-step2100000-loss0.0680.hdf5/000.eval"
 # Plot the rollout trajectory
 # python -m plot_cloth --datafile=${EVAL_RESULT}
 

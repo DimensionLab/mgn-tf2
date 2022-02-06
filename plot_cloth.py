@@ -49,7 +49,7 @@ def plot_cloth(data, filename=None):
 
         return figure,
 
-    ani = animation.FuncAnimation(figure, animate, frames=num_frames, interval=100)
+    _ = animation.FuncAnimation(figure, animate, frames=num_frames, interval=100)
 
     # ani.save(filename)
     plt.show(block=True)

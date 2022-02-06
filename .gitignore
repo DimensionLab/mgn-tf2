@@ -7,6 +7,7 @@ datasets/**/*.json
 datasets/*/results
 output/
 Visualization/logs
+**/*.eval
 
 # Node
 node_modules/

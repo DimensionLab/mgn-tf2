@@ -1,4 +1,4 @@
-tensorflow-gpu
+# tensorflow-gpu
 # on Mac, use tensorflow-macos
 # tensorflow-macos
 matplotlib

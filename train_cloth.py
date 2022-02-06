@@ -91,7 +91,7 @@ def validation(model, dataset, num_trajectories=5):
     all_errors = {horizon: [] for horizon in horizons}
     for i, trajectory in enumerate(dataset.take(num_trajectories)):
         initial_frame = {k: v[0] for k, v in trajectory.items()}
-        predicted_trajectory = rollout(model, initial_frame, trajectory['cells'].shape[0])
+        predicted_trajectory = rollout(model, initial_frame, trajectory['cells'])
 
         error = tf.reduce_mean(tf.square(predicted_trajectory - trajectory['world_pos']), axis=-1)
         for horizon in horizons:
